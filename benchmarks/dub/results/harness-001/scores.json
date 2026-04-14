@@ -1,0 +1,16 @@
+[
+  {"issue_id": "DUB-001", "match": 1.0, "specificity": 2, "insight_depth": 2, "prevention": 2, "weighted_score": 5.0, "notes": "Full match. HMAC-SHA256 fix with timingSafeEqual. Identified cookie storage of plaintext password as additional attack surface."},
+  {"issue_id": "DUB-002", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. allowDangerousEmailAccountLinking not mentioned."},
+  {"issue_id": "DUB-003", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. linksUsage decrement issue not identified."},
+  {"issue_id": "DUB-004", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. console.log in auth not identified."},
+  {"issue_id": "DUB-005", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Account lockout notification not mentioned."},
+  {"issue_id": "DUB-006", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Webhook cache miss not identified."},
+  {"issue_id": "DUB-007", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Malicious link check domain filter not identified."},
+  {"issue_id": "DUB-008", "match": 1.0, "specificity": 2, "insight_depth": 2, "prevention": 2, "weighted_score": 3.0, "notes": "Full match. Explained Stripe retry semantics. Gave 200-always fix + Redis event-ID dedup code."},
+  {"issue_id": "DUB-009", "match": 1.0, "specificity": 2, "insight_depth": 2, "prevention": 1, "weighted_score": 3.0, "notes": "Full match. Found secret in GET response + Zod schema. Recommended hash-at-rest + show-once-at-creation."},
+  {"issue_id": "DUB-010", "match": 1.0, "specificity": 1, "insight_depth": 2, "prevention": 1, "weighted_score": 3.0, "notes": "Full match. Identified default-true on EDGE_CONFIG failure. Explained downstream impact on all beta features."},
+  {"issue_id": "DUB-011", "match": 1.0, "specificity": 2, "insight_depth": 2, "prevention": 1, "weighted_score": 3.0, "notes": "Full match. Identified VERCEL !== '1' bypass. Named specific destructive endpoints (delete workspaces, ban partners)."},
+  {"issue_id": "DUB-012", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. bulkCreateLinks usage drift not identified."},
+  {"issue_id": "DUB-013", "match": 1.0, "specificity": 1, "insight_depth": 1, "prevention": 0, "weighted_score": 1.0, "notes": "Full match. '83 route files call Prisma directly, creating tenant-isolation risk.'"},
+  {"issue_id": "DUB-014", "match": 1.0, "specificity": 1, "insight_depth": 1, "prevention": 1, "weighted_score": 1.0, "notes": "Full match. '74+ hardcoded plan string comparisons.' Mentioned need for plan hierarchy utility."}
+]

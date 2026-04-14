@@ -1,0 +1,16 @@
+{
+  "weighted_recall": 0.396,
+  "raw_recall": "7/14",
+  "total_tokens": 113739,
+  "tool_uses": 127,
+  "duration_ms": 589552,
+  "avg_specificity": 1.57,
+  "avg_insight_depth": 1.57,
+  "avg_prevention": 1.14,
+  "unique_findings": 5,
+  "unique_finding_ids": ["DUB-008", "DUB-009", "DUB-010", "DUB-011", "DUB-013"],
+  "systemic_pattern": 1,
+  "systemic_notes": "Phase 1 scan table categorized all 10 areas systematically; identified 'no repository layer' as cross-cutting risk",
+  "false_positives": 0,
+  "missed": ["DUB-002", "DUB-003", "DUB-004", "DUB-005", "DUB-006", "DUB-007", "DUB-012"]
+}

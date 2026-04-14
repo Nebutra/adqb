@@ -1,0 +1,10 @@
+{
+  "benchmark": "dub",
+  "model": "claude-sonnet-4-6",
+  "config": "guided",
+  "skill": "Nebutra/claude-code-harness v3 (breadth-first scan + verified positives)",
+  "repo_path": "/Users/tseka_luk/Documents/dub",
+  "commit": "da1fcdfe2896ea3aa2bf6169dd432e1197a1e992",
+  "timestamp": "2026-04-14T15:00:00Z",
+  "notes": "Held-out test — SKILL has never seen this codebase"
+}

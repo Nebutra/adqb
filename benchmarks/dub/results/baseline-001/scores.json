@@ -1,0 +1,16 @@
+[
+  {"issue_id": "DUB-001", "match": 1.0, "specificity": 1, "insight_depth": 2, "prevention": 0, "weighted_score": 5.0, "notes": "Full match. Correct analysis of plaintext + double DB query. Fix is directional (mentions bcrypt) but no inline code."},
+  {"issue_id": "DUB-002", "match": 1.0, "specificity": 1, "insight_depth": 1, "prevention": 0, "weighted_score": 5.0, "notes": "Full match. Identified the flag on all 3 providers. Fix is directional."},
+  {"issue_id": "DUB-003", "match": 1.0, "specificity": 2, "insight_depth": 2, "prevention": 0, "weighted_score": 5.0, "notes": "Full match. Traced across create/delete/bulk-delete. Gave inline decrement code for both paths."},
+  {"issue_id": "DUB-004", "match": 1.0, "specificity": 2, "insight_depth": 1, "prevention": 0, "weighted_score": 5.0, "notes": "Full match. Correct file+line. 'Two-line delete fix.'"},
+  {"issue_id": "DUB-005", "match": 1.0, "specificity": 1, "insight_depth": 1, "prevention": 0, "weighted_score": 3.0, "notes": "Full match. Found TODO, explained silent DoS vector."},
+  {"issue_id": "DUB-006", "match": 1.0, "specificity": 2, "insight_depth": 2, "prevention": 0, "weighted_score": 3.0, "notes": "Full match. Gave DB fallback code."},
+  {"issue_id": "DUB-007", "match": 1.0, "specificity": 1, "insight_depth": 1, "prevention": 0, "weighted_score": 3.0, "notes": "Full match. Identified domain filter gap."},
+  {"issue_id": "DUB-008", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Stripe webhook retry semantics not analyzed."},
+  {"issue_id": "DUB-009", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Webhook secret exposure not mentioned."},
+  {"issue_id": "DUB-010", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Feature flag default behavior not analyzed."},
+  {"issue_id": "DUB-011", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Cron auth bypass not mentioned."},
+  {"issue_id": "DUB-012", "match": 1.0, "specificity": 1, "insight_depth": 1, "prevention": 0, "weighted_score": 1.0, "notes": "Full match. Identified skipDuplicates + usage drift."},
+  {"issue_id": "DUB-013", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. No repository layer observation not made."},
+  {"issue_id": "DUB-014", "match": 0.0, "specificity": 0, "insight_depth": 0, "prevention": 0, "weighted_score": 0.0, "notes": "Not found. Hardcoded plan strings not identified."}
+]

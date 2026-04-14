@@ -1,0 +1,15 @@
+{
+  "weighted_recall": 0.625,
+  "raw_recall": "8/14",
+  "total_tokens": 133466,
+  "tool_uses": 123,
+  "duration_ms": 425045,
+  "avg_specificity": 1.38,
+  "avg_insight_depth": 1.38,
+  "avg_prevention": 0.0,
+  "unique_findings": 4,
+  "unique_finding_ids": ["DUB-002", "DUB-003", "DUB-004", "DUB-005"],
+  "systemic_pattern": 0,
+  "false_positives": 0,
+  "missed": ["DUB-008", "DUB-009", "DUB-010", "DUB-011", "DUB-013", "DUB-014"]
+}

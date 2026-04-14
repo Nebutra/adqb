@@ -1,0 +1,11 @@
+{
+  "project": "dub",
+  "repo": "https://github.com/dubinc/dub",
+  "commit": "da1fcdfe2896ea3aa2bf6169dd432e1197a1e992",
+  "stack": "Next.js / React / Prisma / Turbo monorepo / Stripe / Tinybird analytics",
+  "description": "Open-source link management platform. Monorepo with web app, CLI, UI package, Prisma schema, Stripe integration, email templates.",
+  "total_issues": "TBD (ground truth will be established from audit runs)",
+  "created_at": "2026-04-14",
+  "annotator": "Blind audit — no prior knowledge of this codebase",
+  "notes": "Held-out benchmark project. Neither SKILL nor annotator has seen this codebase before."
+}

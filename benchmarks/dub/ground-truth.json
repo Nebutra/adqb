@@ -1,0 +1,156 @@
+[
+  {
+    "id": "DUB-001",
+    "title": "Link passwords stored and compared as plaintext",
+    "severity": "P0",
+    "weight": 5,
+    "category": "security",
+    "context_scope": "cross-file",
+    "files": ["lib/middleware/link.ts", "packages/prisma/schema/link.prisma"],
+    "description": "Password-protected links store raw passwords in MySQL, compared with === in middleware. DB compromise exposes all passwords.",
+    "detection_requires": "Reading middleware comparison logic AND checking schema for password field type"
+  },
+  {
+    "id": "DUB-002",
+    "title": "allowDangerousEmailAccountLinking on all OAuth providers",
+    "severity": "P0",
+    "weight": 5,
+    "category": "security",
+    "context_scope": "local",
+    "files": ["lib/auth/options.ts"],
+    "description": "NextAuth's account-takeover protection disabled on Google, GitHub, and SAML. Attacker controlling a Google account with same email can access any Dub account.",
+    "detection_requires": "Recognizing the NextAuth flag name as a security risk"
+  },
+  {
+    "id": "DUB-003",
+    "title": "linksUsage never decremented on delete",
+    "severity": "P0",
+    "weight": 5,
+    "category": "correctness",
+    "context_scope": "cross-file",
+    "files": ["lib/api/links/delete-link.ts", "lib/api/links/bulk-delete-links.ts"],
+    "description": "Billing counter incremented on creation, reset monthly, but never decremented on deletion. Users incorrectly hit quota limits mid-cycle.",
+    "detection_requires": "Tracing the linksUsage counter across create, delete, and billing reset paths"
+  },
+  {
+    "id": "DUB-004",
+    "title": "console.log of auth credentials in production",
+    "severity": "P0",
+    "weight": 5,
+    "category": "security",
+    "context_scope": "local",
+    "files": ["lib/auth/options.ts"],
+    "description": "OAuth profile objects (may include tokens) logged to Vercel logs on every sign-in.",
+    "detection_requires": "Scanning for console.log in auth code paths"
+  },
+  {
+    "id": "DUB-005",
+    "title": "Account lockout sends no notification",
+    "severity": "P1",
+    "weight": 3,
+    "category": "lifecycle",
+    "context_scope": "local",
+    "files": ["lib/auth/lock-account.ts"],
+    "description": "Account locked after 10 failed attempts with no email notification. TODO comment acknowledges this. Silent DoS vector.",
+    "detection_requires": "Reading the lockout code and noticing the TODO"
+  },
+  {
+    "id": "DUB-006",
+    "title": "Webhook delivery silently drops on Redis cache miss",
+    "severity": "P1",
+    "weight": 3,
+    "category": "lifecycle",
+    "context_scope": "local",
+    "files": ["lib/tinybird/record-click.ts"],
+    "description": "Cache miss for webhook definitions → early return with no DB fallback. Paid feature data silently lost. TODO acknowledges this.",
+    "detection_requires": "Tracing the webhook delivery path and noticing the cache-miss early return"
+  },
+  {
+    "id": "DUB-007",
+    "title": "Malicious link check skips custom domains",
+    "severity": "P1",
+    "weight": 3,
+    "category": "security",
+    "context_scope": "local",
+    "files": ["lib/api/links/process-link.ts"],
+    "description": "Blacklist check only runs for dub.sh and dub.link. Custom domain users can create phishing links unchecked.",
+    "detection_requires": "Reading the conditional around maliciousLinkCheck and noticing the domain filter"
+  },
+  {
+    "id": "DUB-008",
+    "title": "Stripe webhook returns 4xx on business logic errors causing retries",
+    "severity": "P1",
+    "weight": 3,
+    "category": "correctness",
+    "context_scope": "cross-file",
+    "files": ["(ee)/api/stripe/webhook/route.ts"],
+    "description": "Stripe treats 4xx as retriable. Business logic failures (email send, etc.) return 400, causing Stripe to re-fire checkout.session.completed with no idempotency guard.",
+    "detection_requires": "Understanding Stripe webhook retry semantics AND reading the error handling in the webhook handler"
+  },
+  {
+    "id": "DUB-009",
+    "title": "Webhook signing secrets stored plaintext and returned in GET API",
+    "severity": "P1",
+    "weight": 3,
+    "category": "security",
+    "context_scope": "cross-file",
+    "files": ["app/api/webhooks/[webhookId]/route.ts", "lib/zod/schemas/webhooks.ts"],
+    "description": "WebhookSchema includes secret field readable by anyone with webhooks.read scope. Should be hashed at rest, shown raw only at creation.",
+    "detection_requires": "Reading the webhook schema AND the GET route to notice the secret is returned"
+  },
+  {
+    "id": "DUB-010",
+    "title": "Feature flags default to true on EDGE_CONFIG outage",
+    "severity": "P1",
+    "weight": 3,
+    "category": "correctness",
+    "context_scope": "local",
+    "files": ["lib/edge-config/index.ts"],
+    "description": "Transient EDGE_CONFIG failure silently grants all workspaces access to all beta features.",
+    "detection_requires": "Reading the feature flag fallback behavior on config read failure"
+  },
+  {
+    "id": "DUB-011",
+    "title": "Cron routes unauthenticated outside Vercel",
+    "severity": "P1",
+    "weight": 3,
+    "category": "security",
+    "context_scope": "local",
+    "files": ["lib/cron/verify-vercel-cron.ts"],
+    "description": "VERCEL !== '1' bypasses all signature checks. Staging deployments fully open to destructive cron endpoints.",
+    "detection_requires": "Reading the cron verification and noticing the VERCEL environment check bypass"
+  },
+  {
+    "id": "DUB-012",
+    "title": "bulkCreateLinks inflates linksUsage on skipDuplicates",
+    "severity": "P2",
+    "weight": 1,
+    "category": "correctness",
+    "context_scope": "local",
+    "files": ["lib/api/links/bulk-create-links.ts"],
+    "description": "skipDuplicates: true drops duplicate links but usage counter incremented by requested count, not actual count.",
+    "detection_requires": "Understanding Prisma skipDuplicates behavior and checking usage counter logic"
+  },
+  {
+    "id": "DUB-013",
+    "title": "No repository layer — 83+ routes call Prisma directly",
+    "severity": "P2",
+    "weight": 1,
+    "category": "boundary",
+    "context_scope": "repo-wide",
+    "files": ["apps/web/app/api/"],
+    "description": "No data access abstraction. Every route imports Prisma directly, creating tenant-isolation risk on every new query.",
+    "detection_requires": "Scanning route files for direct Prisma imports and recognizing the absence of a repository pattern"
+  },
+  {
+    "id": "DUB-014",
+    "title": "74+ hardcoded plan string comparisons",
+    "severity": "P2",
+    "weight": 1,
+    "category": "boundary",
+    "context_scope": "repo-wide",
+    "files": ["apps/web/"],
+    "description": "Plan hierarchy encoded as string comparisons across 74+ sites. Adding a new plan requires touching all of them.",
+    "detection_requires": "Grep for plan name strings and recognizing the absence of a plan hierarchy utility"
+  }
+]
