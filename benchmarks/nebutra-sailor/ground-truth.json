@@ -1,0 +1,226 @@
+[
+  {
+    "id": "NS-001",
+    "title": "Entitlements stored in process memory, not database",
+    "severity": "P0",
+    "weight": 5,
+    "category": "lifecycle",
+    "context_scope": "cross-file",
+    "files": [
+      "packages/billing/src/entitlements/service.ts",
+      "packages/db/prisma/schema.prisma"
+    ],
+    "lines": [128, 1050],
+    "description": "The entitlement system uses an in-memory Map as its data store. The Prisma schema has a fully designed Entitlement model that is never used.",
+    "why_debt": "Process restart wipes all entitlements. In multi-replica deployment (Kubernetes), each replica has independent state — a user granted an entitlement on replica A is denied on replica B. Three parallel counters (RAM entitlements, Redis usage, Postgres TenantUsage) will diverge. The comment 'production would use database' has been there since the feature was built.",
+    "downstream_impact": "Every deploy resets entitlements. Multi-pod deployment creates inconsistent feature access per tenant. Usage metering diverges from billing.",
+    "ideal_fix": "Replace in-memory Map with database-backed reads via the existing Entitlement model. Cache in Redis with short TTL using @nebutra/cache.",
+    "detection_requires": "Cross-referencing the entitlements service code with the Prisma schema to notice the model exists but is unused. Understanding that in-memory state doesn't survive restarts."
+  },
+  {
+    "id": "NS-002",
+    "title": "RLS declared but never enforced at query sites",
+    "severity": "P0",
+    "weight": 5,
+    "category": "security",
+    "context_scope": "repo-wide",
+    "files": [
+      "packages/db/src/rls.ts",
+      "apps/api-gateway/src/routes/"
+    ],
+    "lines": [10],
+    "description": "withOrgContext() is well-designed but has zero call sites across 35+ Prisma queries in route handlers. All tenant isolation depends on application-layer WHERE organizationId clauses.",
+    "why_debt": "A developer adding a new route will query prisma directly (the obvious path) without the tenant filter. The withRls() function gives a false sense of safety. No architecture test verifies that queries use tenant scoping.",
+    "downstream_impact": "Any missing WHERE clause leaks data across tenants. A compromised JWT with an elevated org claim bypasses all isolation since RLS policies exist in code but not in the database.",
+    "ideal_fix": "Wire withOrgContext into the request handler middleware. Add an architecture test that greps for direct prisma calls outside the repository layer. Create a scoped Prisma client extension pre-bound to org context.",
+    "detection_requires": "Scanning all route files for prisma usage patterns and noticing zero withOrgContext calls. Understanding that set_config without corresponding CREATE POLICY is a no-op."
+  },
+  {
+    "id": "NS-003",
+    "title": "EventBus is in-memory in a multi-process architecture",
+    "severity": "P0",
+    "weight": 5,
+    "category": "lifecycle",
+    "context_scope": "cross-file",
+    "files": [
+      "packages/event-bus/src/bus.ts",
+      "packages/saga/src/orchestrator.ts"
+    ],
+    "lines": [21, 23],
+    "description": "EventBus stores events in a process-local Map with retry logic and DLQ. Events published in one process never reach another. The saga orchestrator depends on this bus for lifecycle events.",
+    "why_debt": "The code looks production-ready (retries, DLQ, backoff) but the transport is process memory. Crash mid-saga produces no audit trail. Compensation logic has no durable record. The DLQ records dead letters only from events that reached the right process — creating 'phantom reliability'.",
+    "downstream_impact": "Saga events silently dropped across service boundaries. Process crash during order saga: customer charged but order record never created, no compensation triggered.",
+    "ideal_fix": "Replace eventBus.publish() with inngest.send() — Inngest is already integrated in the project. Keep synchronous in-process callbacks for within-service coordination.",
+    "detection_requires": "Understanding that an in-memory event bus in a multi-service monorepo is a function call with extra steps, not a distributed event system. Noticing the Inngest integration already exists."
+  },
+  {
+    "id": "NS-004",
+    "title": "Integration credentials stored as plaintext JSON",
+    "severity": "P1",
+    "weight": 3,
+    "category": "security",
+    "context_scope": "cross-file",
+    "files": [
+      "packages/db/prisma/schema.prisma",
+      "apps/api-gateway/src/routes/integrations/index.ts",
+      "packages/vault/src/"
+    ],
+    "lines": [302, 144],
+    "description": "The Integration model stores credentials as plain Json with comment '// Encrypt in app layer'. The @nebutra/vault package with AES-GCM encryption exists but has zero imports in any app code.",
+    "why_debt": "Comment-as-policy: tells future developers to encrypt but provides zero enforcement. Shopify API keys, Stripe secrets stored in cleartext. Database access, backup scripts, Prisma Studio all expose credentials.",
+    "downstream_impact": "PCI-DSS and SOC 2 violation. Any SQL injection bypasses RLS and exposes all credentials. Database compromise exposes every third-party integration key.",
+    "ideal_fix": "Use Prisma.$extends() to encrypt/decrypt credentials transparently at the @nebutra/db layer. Wire in @nebutra/vault. Add test asserting stored value ≠ plaintext input.",
+    "detection_requires": "Noticing the gap between the schema comment ('encrypt in app layer') and the route handler (writes credentials directly). Discovering that @nebutra/vault exists but is unused."
+  },
+  {
+    "id": "NS-005",
+    "title": "Auth guards missing on core monetized routes",
+    "severity": "P1",
+    "weight": 3,
+    "category": "security",
+    "context_scope": "cross-file",
+    "files": [
+      "apps/api-gateway/src/routes/ai/index.ts",
+      "apps/api-gateway/src/routes/billing/index.ts",
+      "apps/api-gateway/src/routes/integrations/index.ts"
+    ],
+    "lines": [],
+    "description": "The three highest-value route groups (ai, billing, integrations) have no requireAuth middleware at the router level. tenantContextMiddleware populates context but does not enforce authentication. Unauthenticated requests fall through with organizationId: ''.",
+    "why_debt": "A comment claims 'all routes require authentication' — this is false. requireFeature (entitlement enforcement middleware) has zero usages across all route files. The entitlement system exists but is never enforced at the API boundary.",
+    "downstream_impact": "AI chat proxy, billing portal, and integration management reachable without authentication.",
+    "ideal_fix": "Add requireAuth + requireOrganization at the top of each core route file. Wire requireFeature once entitlement backend is persistent.",
+    "detection_requires": "Comparing routes that DO have auth guards (agents, legal/consent) with routes that don't (ai, billing, integrations). Grepping for requireFeature usage and finding zero results."
+  },
+  {
+    "id": "NS-006",
+    "title": "Billing route hardcodes plan limit as magic number",
+    "severity": "P1",
+    "weight": 3,
+    "category": "correctness",
+    "context_scope": "cross-file",
+    "files": [
+      "apps/api-gateway/src/routes/billing/index.ts",
+      "packages/billing/src/types.ts"
+    ],
+    "lines": [164],
+    "description": "checkUsageLimit is called with hardcoded BigInt(10000) instead of reading from DEFAULT_PLAN_LIMITS which defines per-plan values (FREE: 1000, PRO: 50000).",
+    "why_debt": "PRO tenant sees limit: 10000 instead of 50000. FREE tenant with 5000 calls sees 50% used instead of 500% over limit. The plan limits definition exists but the enforcement point bypasses it entirely.",
+    "downstream_impact": "Incorrect billing enforcement. Revenue leakage (PRO users shown lower limit than purchased). FREE users consuming 5x their quota without throttling.",
+    "ideal_fix": "Replace BigInt(10000) with BigInt(DEFAULT_PLAN_LIMITS[tenant.plan].apiCalls). Three-line fix.",
+    "detection_requires": "Reading the billing route and noticing a magic number. Cross-referencing with the types file to discover plan-specific limits exist."
+  },
+  {
+    "id": "NS-007",
+    "title": "Mock payment path ships in production code",
+    "severity": "P1",
+    "weight": 3,
+    "category": "security",
+    "context_scope": "local",
+    "files": [
+      "packages/saga/src/workflows/orderSaga.ts"
+    ],
+    "lines": [32],
+    "description": "When customerId is absent, the chargePayment step returns mock_pay_${Date.now()} as paymentId. Not gated by NODE_ENV, no warning prefix, no CI failure.",
+    "why_debt": "Test environment with missing customerId silently creates 'successful' order records with fake payment IDs. This is the 'good intentions started but not completed' pattern — someone needed to test without Stripe, left the fallback, it became permanent.",
+    "downstream_impact": "Production orders could have fake payment IDs if customerId is ever undefined. No audit trail distinguishes real from mock payments.",
+    "ideal_fix": "Remove mock path. Require customerId or throw with message: 'use test Stripe keys in development'.",
+    "detection_requires": "Reading the saga workflow and noticing the fallback path has no environment gate."
+  },
+  {
+    "id": "NS-008",
+    "title": "S2S HMAC mismatch between saga and gateway",
+    "severity": "P1",
+    "weight": 3,
+    "category": "security",
+    "context_scope": "cross-file",
+    "files": [
+      "packages/saga/src/workflows/orderSaga.ts",
+      "apps/api-gateway/src/middlewares/tenantContext.ts"
+    ],
+    "lines": [32, 45],
+    "description": "gatewayFetch() sends the raw SERVICE_SECRET as x-service-token. tenantContextMiddleware expects an HMAC of the canonical headers, not the raw secret. The saga's internal service calls fail HMAC verification.",
+    "why_debt": "Two components implement different sides of the same auth protocol but were never integration-tested together. The saga's service calls are effectively unauthenticated — organizationId would be undefined in downstream handlers.",
+    "downstream_impact": "Order saga's internal calls to inventory/order endpoints return 403 or operate with empty tenant context.",
+    "ideal_fix": "Compute HMAC in gatewayFetch() using the same algorithm as verifyServiceToken(), or extract to shared @nebutra/auth/s2s utility.",
+    "detection_requires": "Reading both the saga's fetch wrapper and the middleware's token verification to notice the protocol mismatch."
+  },
+  {
+    "id": "NS-009",
+    "title": "Dual feature flag systems with no single source of truth",
+    "severity": "P2",
+    "weight": 1,
+    "category": "lifecycle",
+    "context_scope": "cross-file",
+    "files": [
+      "packages/feature-flags/src/index.ts",
+      "packages/db/prisma/schema.prisma"
+    ],
+    "lines": [505],
+    "description": "Two parallel flag systems: env-based provider (FLAGS constants) and database models (FeatureFlag + FeatureFlagOverride). Neither references the other. The middleware only reads from env provider.",
+    "why_debt": "DB model supports per-org overrides (enterprise sales requirement) but the middleware never consults them. FeatureFlagOverride rows in database will never affect production behavior. Two sources of truth with undefined precedence.",
+    "downstream_impact": "Enterprise customer overrides don't work. 'Is feature X enabled for org Y?' has two possible answers depending on which system is queried.",
+    "ideal_fix": "Make DB authoritative. Implement DatabaseFeatureFlagProvider. Cache in Redis. Add lifecycle column (draft/canary/ga/deprecated/archived).",
+    "detection_requires": "Noticing both systems exist by reading the feature-flags package AND the Prisma schema, then checking if the middleware uses both."
+  },
+  {
+    "id": "NS-010",
+    "title": "Zod v3/v4 version split across package graph",
+    "severity": "P2",
+    "weight": 1,
+    "category": "correctness",
+    "context_scope": "repo-wide",
+    "files": [
+      "package.json",
+      "packages/event-bus/package.json",
+      "packages/tenant/package.json",
+      "packages/permissions/package.json",
+      "packages/vault/package.json",
+      "packages/queue/package.json",
+      "packages/webhooks/package.json",
+      "packages/metering/package.json",
+      "packages/notifications/package.json",
+      "packages/license/package.json"
+    ],
+    "lines": [],
+    "description": "Workspace catalog pins Zod v4. Nine packages explicitly declare zod: ^3.25.76. pnpm overrides force v4 at install time, creating silent contract break.",
+    "why_debt": "Packages written against Zod 3 API silently running against Zod 4. Breaking changes in .parse() behavior, ZodError format, z.input/z.output split. Local pnpm install may resolve differently than workspace-level override.",
+    "downstream_impact": "Silent test false-positives. Schema validation edge cases behave differently than expected. Version confusion between local dev and CI.",
+    "ideal_fix": "Update all 9 packages to use 'zod': 'catalog:'. Audit each for Zod 4 breaking changes.",
+    "detection_requires": "Scanning package.json files across the monorepo and comparing declared versions with the catalog/override configuration."
+  },
+  {
+    "id": "NS-011",
+    "title": "Phantom PostgreSQL schemas declared but empty",
+    "severity": "P2",
+    "weight": 1,
+    "category": "boundary",
+    "context_scope": "local",
+    "files": [
+      "packages/db/prisma/schema.prisma"
+    ],
+    "lines": [5],
+    "description": "Datasource declares schemas = ['public', 'ecommerce', 'recsys', 'web3'] but all 59 models use @@schema('public'). The ecommerce, recsys, web3 schemas contain no models.",
+    "why_debt": "Declared architecture implies domain isolation via PostgreSQL schemas. Reality is a single public schema. Developers and DBAs assume these schemas exist with policies and objects.",
+    "downstream_impact": "Cognitive debt: new developers make false assumptions. Any attempt to add schema-level permissions based on this topology applies to nothing. Migration scripts referencing these schemas fail silently.",
+    "ideal_fix": "Either migrate domain models to their declared schemas, or remove unused schema declarations to align code with reality.",
+    "detection_requires": "Grepping @@schema annotations and comparing with the datasource schemas declaration."
+  },
+  {
+    "id": "NS-012",
+    "title": "Saga orchestrator has no idempotency or durable state",
+    "severity": "P2",
+    "weight": 1,
+    "category": "lifecycle",
+    "context_scope": "local",
+    "files": [
+      "packages/saga/src/orchestrator.ts",
+      "packages/saga/src/workflows/orderSaga.ts"
+    ],
+    "lines": [23],
+    "description": "SagaOrchestrator holds state in instance variables (completedSteps: string[]). No idempotency keys on Stripe calls. Duplicate webhook triggers cause double charges.",
+    "why_debt": "The saga framework design (immutable context, reverse compensation) is correct, but the concrete implementation has no crash recovery, no dedup, and no persistent state. orderId is not used as Stripe idempotency key.",
+    "downstream_impact": "Duplicate webhook → double Stripe charge. Process crash → no record of completed steps → compensation can't execute.",
+    "ideal_fix": "Pass orderId as Stripe idempotency key. Persist saga state to database or migrate to Inngest functions.",
+    "detection_requires": "Understanding that saga correctness requires idempotency at each step boundary. Noticing the Stripe call has no idempotencyKey parameter."
+  }
+]

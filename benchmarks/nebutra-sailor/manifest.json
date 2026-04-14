@@ -1,0 +1,16 @@
+{
+  "project": "nebutra-sailor",
+  "repo": "https://github.com/Nebutra/Nebutra-Sailor",
+  "commit": "bf31ff221de01a65066c0980c4548d3e97c0a990",
+  "stack": "Next.js 16 / React 19 / Hono / Prisma 7 / Python FastAPI / pnpm Turbo monorepo",
+  "description": "AI-native SaaS monorepo: 59 Prisma models, 11 API route groups, 7 middlewares, 55+ packages, multi-tenant architecture",
+  "total_issues": 12,
+  "total_weight": 34,
+  "context_scope_distribution": {
+    "local": 3,
+    "cross-file": 5,
+    "repo-wide": 4
+  },
+  "created_at": "2026-04-14",
+  "annotator": "Expert with full source access, validated across 4 independent AI audit runs"
+}
