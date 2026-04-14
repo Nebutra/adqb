@@ -180,20 +180,42 @@ python scripts/compare_runs.py \
 | System | Model | Config | Recall (W) | Raw | Specificity | Insight | Tokens | Efficiency |
 |--------|-------|--------|-----------|------|-------------|---------|--------|------------|
 | Baseline (no skill) | claude-sonnet-4-6 | full-context | **76.5%** | 8/12 | 1.63 | 1.63 | 131K | 5,085 |
-| Claude Code Harness | claude-sonnet-4-6 | guided | 58.8% | 7/12 | **1.71** | **1.71** | 143K | 7,185 |
+| Harness v1 | claude-sonnet-4-6 | guided | 58.8% | 7/12 | 1.71 | 1.71 | 143K | 7,185 |
+| **Harness v3** | claude-sonnet-4-6 | guided | 69.1% | **8/12** | **1.88** | **1.88** | 132K | **5,626** |
 
 ### Analysis
 
-The baseline **outperformed** the harness on weighted recall (76.5% vs 58.8%) in this first run. Key observations:
+### Run 1: Baseline vs Harness v1
 
-- **Baseline found more ground-truth issues** (8 vs 7), particularly NS-005 (missing auth guards) and NS-006 (hardcoded billing limit) which the harness missed
-- **Harness had higher specificity and insight depth** per found issue (1.71 vs 1.63) — when it found something, the analysis was deeper
-- **Harness found unique bonus issues** not in ground truth: dead Stripe billing sync, GDPR Redis gap, Python AI service no auth, OrderItem missing timestamps
-- **Harness had a false positive**: praised phantom PostgreSQL schemas as "clean separation" when they are actually empty — a dangerous miss
-- **Baseline found 9 bonus issues** (audit type mismatch, subscription status inconsistency, saga compensation swallowing, etc.)
-- **Both missed**: NS-002 (RLS not enforced), NS-010 (Zod version split)
+The baseline outperformed v1 on recall (76.5% vs 58.8%). v1 had higher depth per finding but missed more issues and had a false positive (praised phantom schemas as "clean separation").
 
-**Verdict**: The harness needs iteration. It improved depth-per-finding but reduced breadth. The SKILL's routing toward "architectural thinking" may have caused it to spend more tokens on fewer, deeper analyses rather than casting a wider net. The false positive (praising phantom schemas) is a specific failure mode where the SKILL's "what is working well" output standard led to over-generous assessment.
+### Run 2: Harness v3 (after iteration)
+
+v3 added a mandatory breadth-first coverage scan and verified-positive requirement. Results:
+
+| Improvement | v1 → v3 |
+|-------------|---------|
+| Weighted recall | 58.8% → **69.1%** (+10.3 pts) |
+| Raw recall | 7/12 → **8/12** |
+| Specificity | 1.71 → **1.88** |
+| Insight depth | 1.71 → **1.88** |
+| Tokens | 143K → **132K** (-8%) |
+| Efficiency | 7,185 → **5,626** (-22%) |
+| False positives | 1 → **0** |
+
+**Key v3 wins:**
+- **Found NS-002 (RLS not enforced)** — both baseline and v1 missed this. v3's coverage checklist forced a scan of data access patterns.
+- **Found NS-012 (saga idempotency)** as full match with Stripe idempotencyKey code — v1 only partially found this.
+- **Eliminated false positive** — phantom schemas no longer praised (verified-positive requirement worked).
+- **Token cost dropped below baseline** — 132K vs 131K, essentially equivalent.
+
+**Remaining gaps (both v3 and baseline miss):**
+- NS-006 (hardcoded billing limit) — a simple cross-file correctness bug. Baseline found it; v3 didn't.
+- NS-010 (Zod version split) — requires scanning all package.json files across monorepo.
+- NS-011 (phantom schemas) — v3 no longer false-positives but doesn't flag it either.
+- NS-003 (EventBus in-memory) — baseline found it; v3's scan mentioned in-memory Maps but focused on billing, not event bus.
+
+**Verdict**: v3 closed ~60% of the gap with baseline on recall while maintaining a significant depth advantage (1.88 vs 1.63 specificity/insight). The coverage checklist works. Further iteration should target the remaining 4 missed issues.
 
 ## Contributing
 

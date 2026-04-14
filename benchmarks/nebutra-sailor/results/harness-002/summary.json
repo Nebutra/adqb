@@ -1,0 +1,31 @@
+{
+  "weighted_recall": 0.691,
+  "raw_recall": "8/12",
+  "found_issues": ["NS-001", "NS-002", "NS-004", "NS-005", "NS-007", "NS-008", "NS-012"],
+  "partial_issues": ["NS-009"],
+  "missed_issues": ["NS-003", "NS-006", "NS-010", "NS-011"],
+  "avg_specificity": 1.88,
+  "avg_insight_depth": 1.88,
+  "token_efficiency": 5626,
+  "total_tokens": 132173,
+  "total_tool_uses": 101,
+  "duration_ms": 500237,
+  "context_scope_recall": {
+    "local": 0.50,
+    "cross-file": 0.84,
+    "repo-wide": 0.63
+  },
+  "bonus_findings": [
+    "S2S dev-mode bypass has no production guard (empty string edge case)",
+    "Feature flag plan type mismatch (lowercase 'pro' vs uppercase 'PRO')",
+    "Agent loop has no token budget or consecutive-failure circuit breaker",
+    "checkAgentQuota failsafe-open grants unlimited quota on billing failure"
+  ],
+  "false_positive": "Phase 1 said 'Dependencies: catalog-pinned, consistent' — actually 9 packages pin Zod v3 while catalog pins v4",
+  "improvements_over_v1": [
+    "Found NS-002 (RLS not enforced) — both v1 harness and baseline missed this",
+    "Found NS-012 (saga idempotency) as full match with Stripe idempotencyKey code",
+    "No false positive on phantom schemas (eliminated by verification requirement)",
+    "Two-phase structure visible in output (Phase 1 scan table + Phase 2 depth)"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "benchmark": "nebutra-sailor",
+  "model": "claude-sonnet-4-6",
+  "config": "guided",
+  "skill": "Nebutra/claude-code-harness v3 (breadth-first scan + verified positives)",
+  "repo_path": "/Users/tseka_luk/Documents/Nebutra-SaaS-Lab/Nebutra-Sailor",
+  "commit": "bf31ff221de01a65066c0980c4548d3e97c0a990",
+  "timestamp": "2026-04-14T14:00:00Z",
+  "notes": "Iteration targeting recall improvement: added breadth-first scan phase, coverage checklist, verified positives requirement"
+}
