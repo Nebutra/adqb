@@ -1,0 +1,28 @@
+{
+  "weighted_recall": 0.765,
+  "raw_recall": "8/12",
+  "found_issues": ["NS-001", "NS-003", "NS-004", "NS-005", "NS-006", "NS-007", "NS-008", "NS-012"],
+  "missed_issues": ["NS-002", "NS-009", "NS-010", "NS-011"],
+  "avg_specificity": 1.63,
+  "avg_insight_depth": 1.63,
+  "token_efficiency": 5085,
+  "total_tokens": 131781,
+  "total_tool_uses": 106,
+  "duration_ms": 529806,
+  "context_scope_recall": {
+    "local": 1.0,
+    "cross-file": 0.79,
+    "repo-wide": 0.0
+  },
+  "bonus_findings": [
+    "AuditAction type incompatibility between TS and Prisma enum",
+    "Audit storage defaults to in-memory, never wired",
+    "Stripe client instantiated per-request",
+    "Rate limit Map has no cleanup (memory leak)",
+    "In-memory rate limiter per-process",
+    "Subscription status mapping inconsistency Python vs TS",
+    "Saga compensation swallows refund errors",
+    "Usage buffer flush is no-op (DB write commented out)",
+    "INCR+EXPIRE non-atomic in usage metering"
+  ]
+}

@@ -177,9 +177,23 @@ python scripts/compare_runs.py \
 
 ## Leaderboard
 
-| System | Model | Config | Recall (W) | Precision | Specificity | Insight | Efficiency |
-|--------|-------|--------|-----------|-----------|-------------|---------|------------|
-| | | | *Results after first benchmark run* | | | | |
+| System | Model | Config | Recall (W) | Raw | Specificity | Insight | Tokens | Efficiency |
+|--------|-------|--------|-----------|------|-------------|---------|--------|------------|
+| Baseline (no skill) | claude-sonnet-4-6 | full-context | **76.5%** | 8/12 | 1.63 | 1.63 | 131K | 5,085 |
+| Claude Code Harness | claude-sonnet-4-6 | guided | 58.8% | 7/12 | **1.71** | **1.71** | 143K | 7,185 |
+
+### Analysis
+
+The baseline **outperformed** the harness on weighted recall (76.5% vs 58.8%) in this first run. Key observations:
+
+- **Baseline found more ground-truth issues** (8 vs 7), particularly NS-005 (missing auth guards) and NS-006 (hardcoded billing limit) which the harness missed
+- **Harness had higher specificity and insight depth** per found issue (1.71 vs 1.63) — when it found something, the analysis was deeper
+- **Harness found unique bonus issues** not in ground truth: dead Stripe billing sync, GDPR Redis gap, Python AI service no auth, OrderItem missing timestamps
+- **Harness had a false positive**: praised phantom PostgreSQL schemas as "clean separation" when they are actually empty — a dangerous miss
+- **Baseline found 9 bonus issues** (audit type mismatch, subscription status inconsistency, saga compensation swallowing, etc.)
+- **Both missed**: NS-002 (RLS not enforced), NS-010 (Zod version split)
+
+**Verdict**: The harness needs iteration. It improved depth-per-finding but reduced breadth. The SKILL's routing toward "architectural thinking" may have caused it to spend more tokens on fewer, deeper analyses rather than casting a wider net. The false positive (praising phantom schemas) is a specific failure mode where the SKILL's "what is working well" output standard led to over-generous assessment.
 
 ## Contributing
 

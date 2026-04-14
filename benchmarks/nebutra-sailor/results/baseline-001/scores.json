@@ -1,0 +1,14 @@
+[
+  {"issue_id": "NS-001", "match": 1.0, "specificity": 2, "insight_depth": 2, "weighted_score": 5.0, "notes": "Full match. Correct file+line. Explains process restart + multi-replica divergence. Gives inline Prisma query fix."},
+  {"issue_id": "NS-002", "match": 0.0, "specificity": 0, "insight_depth": 0, "weighted_score": 0.0, "notes": "Not found. RLS/withOrgContext not mentioned."},
+  {"issue_id": "NS-003", "match": 1.0, "specificity": 1, "insight_depth": 1, "weighted_score": 5.0, "notes": "Found as issue #14. Correct diagnosis (in-memory, lost on restart). Fix is directional (mentions Postgres/Inngest) but no inline code."},
+  {"issue_id": "NS-004", "match": 1.0, "specificity": 2, "insight_depth": 2, "weighted_score": 3.0, "notes": "Full match. Correct file+line. Vault exists but unused. Gives encrypt/decrypt inline code."},
+  {"issue_id": "NS-005", "match": 1.0, "specificity": 2, "insight_depth": 2, "weighted_score": 3.0, "notes": "Full match as issue #2. Compares with agentRoutes that DO have auth. Gives one-line middleware fix."},
+  {"issue_id": "NS-006", "match": 1.0, "specificity": 1, "insight_depth": 1, "weighted_score": 3.0, "notes": "Found as issue #10. Correct file+line (164). Explains PRO/FREE mismatch. Fix mentions getPlanUsageLimit but no full inline code."},
+  {"issue_id": "NS-007", "match": 1.0, "specificity": 2, "insight_depth": 2, "weighted_score": 3.0, "notes": "Full match as issue #13. Correct analysis of mock_pay + compensation skip. Gives throw replacement code."},
+  {"issue_id": "NS-008", "match": 1.0, "specificity": 2, "insight_depth": 2, "weighted_score": 3.0, "notes": "Full match as issue #4. Deep analysis: raw secret vs HMAC, missing canonical headers, dev fallback masking. Full HMAC fix code."},
+  {"issue_id": "NS-009", "match": 0.0, "specificity": 0, "insight_depth": 0, "weighted_score": 0.0, "notes": "Not found. Dual feature flag systems not mentioned."},
+  {"issue_id": "NS-010", "match": 0.0, "specificity": 0, "insight_depth": 0, "weighted_score": 0.0, "notes": "Not found. Zod version split not mentioned."},
+  {"issue_id": "NS-011", "match": 0.0, "specificity": 0, "insight_depth": 0, "weighted_score": 0.0, "notes": "Not found. Phantom schemas not mentioned."},
+  {"issue_id": "NS-012", "match": 1.0, "specificity": 1, "insight_depth": 1, "weighted_score": 1.0, "notes": "Partial match. Saga non-idempotency found as cross-cutting in issue #12 (compensation swallows errors) but idempotency key specifically not called out. Issue #13 covers mock payment but not the dedup concern."}
+]

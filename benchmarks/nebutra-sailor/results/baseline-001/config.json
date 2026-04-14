@@ -1,0 +1,9 @@
+{
+  "benchmark": "nebutra-sailor",
+  "model": "claude-sonnet-4-6",
+  "config": "full-context",
+  "skill": null,
+  "repo_path": "/Users/tseka_luk/Documents/Nebutra-SaaS-Lab/Nebutra-Sailor",
+  "commit": "bf31ff221de01a65066c0980c4548d3e97c0a990",
+  "timestamp": "2026-04-14T12:00:00Z"
+}

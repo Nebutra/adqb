@@ -1,0 +1,28 @@
+{
+  "weighted_recall": 0.588,
+  "raw_recall": "7/12",
+  "found_issues": ["NS-001", "NS-004", "NS-007", "NS-008", "NS-009", "NS-011", "NS-012"],
+  "partial_issues": ["NS-003", "NS-005"],
+  "missed_issues": ["NS-002", "NS-006", "NS-010"],
+  "avg_specificity": 1.71,
+  "avg_insight_depth": 1.71,
+  "token_efficiency": 7185,
+  "total_tokens": 143704,
+  "total_tool_uses": 115,
+  "duration_ms": 617449,
+  "context_scope_recall": {
+    "local": 0.83,
+    "cross-file": 0.55,
+    "repo-wide": 0.19
+  },
+  "bonus_findings": [
+    "Stripe billing sync Inngest function is dead code (Organization.plan never updates)",
+    "GDPR deletion misses Redis-stored PII (agent conversation memory)",
+    "Python AI service has no S2S authentication",
+    "Two competing entitlement systems (DB vs hardcoded TS)",
+    "OrderItem schema has no timestamps",
+    "Feature flag admin overrides stored in process-local Map",
+    "Credits service also in-memory (not just entitlements)"
+  ],
+  "false_positive": "Praised phantom PostgreSQL schemas as 'clean separation' when they are actually empty"
+}
