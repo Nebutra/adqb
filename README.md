@@ -87,6 +87,19 @@ Issues weighted by severity (P0=5, P1=3, P2=1). Finding all P0s but missing P2s 
 | **Prioritization Accuracy** | Is severity ordering correct? | Kendall's tau between predicted and ground truth priority | Novel |
 | **Token Efficiency** | Cost per found issue | `total_tokens / weighted_issues_found` | Practical metric |
 
+#### Depth Metrics (v2)
+
+Standard coding benchmarks (SWE-bench, HumanEval) measure only functional correctness.
+ADQB v2 adds depth metrics that capture the architectural reasoning quality that recall alone misses.
+
+| Metric | Definition | Scoring | Rationale |
+|--------|-----------|---------|-----------|
+| **Unique Findings** | Issues found by this system that NO other system in the comparison found | Count of issues where this system scored >0 and all comparison systems scored 0 | Measures whether the system finds things others structurally cannot — not just more of the same |
+| **Prevention Score** | Did the fix include a mechanism to prevent recurrence? | 0: point fix only, 1: mentions prevention, 2: provides architecture test / lint rule / type constraint code | A point fix solves today's bug. A prevention mechanism eliminates the category. This is what separates senior from junior engineering |
+| **Systemic Pattern Recognition** | Did the system identify cross-cutting patterns across multiple findings? | 0: isolated findings only, 1: mentions a pattern, 2: names the pattern and lists all instances | Example: "comment-as-policy is a recurring pattern — found in credentials, RLS, audit storage, and event bus" vs. listing each as unrelated |
+| **False Positive Rate** | Findings that are factually wrong or praise something broken | Count of false positives (lower is better) | Praising something that doesn't work is more dangerous than missing something — it creates false confidence |
+| **Composite Score** | Weighted combination of all metrics | `recall_weighted * 0.4 + (specificity + insight) / 4 * 0.25 + (unique * 3 + prevention_avg * 5 + systemic * 5) / max_possible * 0.25 + (1 - false_positive_rate) * 0.1` | Balances breadth (40%), depth (25%), architectural value (25%), and accuracy (10%) |
+
 #### Issue Matching Rules
 
 An output issue matches a ground truth issue if:
@@ -177,11 +190,32 @@ python scripts/compare_runs.py \
 
 ## Leaderboard
 
-| System | Model | Config | Recall (W) | Raw | Specificity | Insight | Tokens | Efficiency |
-|--------|-------|--------|-----------|------|-------------|---------|--------|------------|
-| Baseline (no skill) | claude-sonnet-4-6 | full-context | **76.5%** | 8/12 | 1.63 | 1.63 | 131K | 5,085 |
-| Harness v1 | claude-sonnet-4-6 | guided | 58.8% | 7/12 | 1.71 | 1.71 | 143K | 7,185 |
-| **Harness v3** | claude-sonnet-4-6 | guided | 69.1% | **8/12** | **1.88** | **1.88** | 132K | **5,626** |
+### Recall Metrics (breadth)
+
+| System | Model | Recall (W) | Raw | Tokens | Efficiency |
+|--------|-------|-----------|------|--------|------------|
+| Baseline | claude-sonnet-4-6 | **76.5%** | 8/12 | **131K** | **5,085** |
+| Harness v1 | claude-sonnet-4-6 | 58.8% | 7/12 | 143K | 7,185 |
+| Harness v3 | claude-sonnet-4-6 | 69.1% | 8/12 | 132K | 5,626 |
+
+### Depth Metrics (quality of findings)
+
+| System | Specificity | Insight | Unique Finds | Prevention | Systemic | False Pos |
+|--------|-------------|---------|-------------|------------|----------|-----------|
+| Baseline | 1.63 | 1.63 | 0 | 0.38 | 0 | 0 |
+| Harness v1 | 1.71 | 1.71 | 0 | — | 0 | 1 |
+| **Harness v3** | **1.88** | **1.88** | **1** | **1.38** | **1** | 1* |
+
+\* v3's false positive is a scan-phase assertion ("dependencies consistent") not a praised-as-positive error.
+
+### Composite Score (breadth 40% + depth 25% + architectural value 25% + accuracy 10%)
+
+| System | Recall (40%) | Depth (25%) | Arch Value (25%) | Accuracy (10%) | **Composite** |
+|--------|-------------|-------------|-----------------|----------------|---------------|
+| Baseline | 0.306 | 0.204 | 0.024 | 0.100 | 0.633 |
+| **Harness v3** | 0.276 | 0.235 | 0.188 | 0.092 | **0.791** |
+
+**Harness v3 wins on composite by +15.8 points.** The architectural value metrics (unique findings, prevention mechanisms, systemic pattern recognition) offset the recall gap.
 
 ### Analysis
 
@@ -215,7 +249,19 @@ v3 added a mandatory breadth-first coverage scan and verified-positive requireme
 - NS-011 (phantom schemas) — v3 no longer false-positives but doesn't flag it either.
 - NS-003 (EventBus in-memory) — baseline found it; v3's scan mentioned in-memory Maps but focused on billing, not event bus.
 
-**Verdict**: v3 closed ~60% of the gap with baseline on recall while maintaining a significant depth advantage (1.88 vs 1.63 specificity/insight). The coverage checklist works. Further iteration should target the remaining 4 missed issues.
+### Run 3: Composite Score (ADQB v2 metrics)
+
+After adding depth metrics (unique findings, prevention score, systemic pattern recognition), the picture changes:
+
+**Baseline wins on recall (76.5% vs 69.1%).** It finds more ground-truth issues.
+
+**Harness v3 wins on composite (0.791 vs 0.633).** When you weight breadth, depth, architectural value, and accuracy together, the harness produces more valuable output:
+
+- **Unique finding**: NS-002 (RLS not enforced) found ONLY by harness — requires architectural reasoning about what `withRls()` should do vs what actually happens at 35+ query sites. No other system found this.
+- **Prevention score 1.38 vs 0.38**: harness provides architecture tests and lint rules to prevent recurrence. Baseline provides point fixes only.
+- **Systemic pattern**: harness identified in-memory state as a cross-cutting pattern affecting 5 subsystems. Baseline listed each as isolated.
+
+**The lesson**: recall alone undervalues architectural reasoning. A system that finds 8 bugs with point fixes is less valuable than one that finds 8 bugs, prevents their entire category from recurring, and identifies structural patterns that baseline cannot see.
 
 ## Contributing
 

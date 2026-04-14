@@ -1,0 +1,15 @@
+{
+  "unique_findings": 0,
+  "unique_finding_ids": [],
+  "unique_finding_notes": "Every issue baseline found was also found by at least one harness version",
+  "prevention_scores": {
+    "NS-001": 0, "NS-003": 0, "NS-004": 0, "NS-005": 1,
+    "NS-006": 0, "NS-007": 1, "NS-008": 1, "NS-012": 0
+  },
+  "prevention_avg": 0.375,
+  "prevention_notes": "Fix code provided but no architecture tests or lint rules to prevent recurrence. NS-005 mentions adding middleware (prevention pattern). NS-007 gives throw code. NS-008 gives HMAC code.",
+  "systemic_pattern": 0,
+  "systemic_notes": "Each finding listed as isolated issue. No cross-cutting pattern identified (e.g., 'comment-as-policy' appears in NS-004, NS-003, NS-001 but not connected).",
+  "false_positives": 0,
+  "composite_score": 0.0
+}

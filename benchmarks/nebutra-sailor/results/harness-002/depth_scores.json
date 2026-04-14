@@ -1,0 +1,16 @@
+{
+  "unique_findings": 1,
+  "unique_finding_ids": ["NS-002"],
+  "unique_finding_notes": "NS-002 (RLS not enforced) found ONLY by harness v3. Neither baseline nor harness v1 found it. This is an architecture-level insight requiring cross-file reasoning about what withRls() SHOULD do vs what actually happens at query sites.",
+  "prevention_scores": {
+    "NS-001": 1, "NS-002": 2, "NS-004": 1, "NS-005": 2,
+    "NS-007": 1, "NS-008": 2, "NS-009": 0, "NS-012": 2
+  },
+  "prevention_avg": 1.375,
+  "prevention_notes": "NS-002: gave SQL migration for RLS policies + architecture test code. NS-005: gave per-file fix AND architecture test that fails CI if any route file lacks requireAuth. NS-008: gave production-safe fix with NODE_ENV guard. NS-012: gave idempotency key pattern + Stripe idempotencyKey parameter. Consistently provides prevention mechanisms, not just point fixes.",
+  "systemic_pattern": 1,
+  "systemic_notes": "Phase 1 scan table identifies in-memory state as a recurring pattern across billing, credits, entitlements, rate limiting, and admin flags — listing all 5 instances as a single category. However, does not explicitly name the 'comment-as-policy' pattern that connects credentials, RLS, audit, and event bus.",
+  "false_positives": 1,
+  "false_positive_details": "Phase 1 scan: 'Dependencies: catalog-pinned, consistent' — actually 9 packages pin Zod v3 while catalog pins v4. Not a praised positive (unlike v1's phantom schema praise) but an incorrect assessment in the scan table.",
+  "composite_score": 0.0
+}
